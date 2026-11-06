@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tu código</title>
+    <link rel="stylesheet" th:href="@{/css/ingreso.css}">
+</head>
+<body>
+<main class="card">
+    <h1>Tu código de ingreso</h1>
+    <div class="body">
+        <p>Hola, <b th:text="${nombre}">Nombre</b>. Este es tu código:</p>
+        <code class="cod" th:text="${codigo}">K7M2QX9P</code>
+        <div class="warn"><b>Anótalo ahora.</b> Lo necesitas para volver a ver tu historial. Si lo pierdes, no se puede recuperar.</div>
+        <a class="btn" style="text-align:center;text-decoration:none;display:block" th:href="@{/}">Continuar</a>
+    </div>
+    <div class="foot"></div>
+</main>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-theme=${tema}" th:style="|--fs:${tamano}px|">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>Guali – Práctica de Java</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:attr="data-admin=${esAdmin}">
+
+<nav class="menubar" aria-label="Menú principal">
+    <div class="menu">
+        <button type="button" class="menu-btn" aria-haspopup="true" aria-expanded="false">Lecciones</button>
+        <div class="menu-list" hidden>
+            <button type="button" id="mAbrir">Abrir lección</button>
+            <button type="button" id="mCerrar">Cerrar lección</button>
+        </div>
+    </div>
+
+    <div class="menu">
+        <button type="button" class="menu-btn" aria-haspopup="true" aria-expanded="false">Configuración</button>
+        <div class="menu-list" hidden>
+            <button type="button" id="mMas">Aumentar tamaño de fuente</button>
+            <button type="button" id="mMenos">Disminuir tamaño de fuente</button>
+            <button type="button" id="mClaro">Tema claro</button>
+            <button type="button" id="mOscuro">Tema oscuro</button>
+            <button th:if="${esAdmin}" type="button" id="mPass">Cambiar mi contraseña</button>
+            <div th:if="${gestionaLecciones}" class="sep"></div>
+            <button th:if="${gestionaLecciones}" type="button" id="mImportar">Importar compendio (bundle)</button>
+            <a th:if="${gestionaLecciones}" th:href="@{/admin/lecciones/exportar}" class="item">Exportar lecciones</a>
+            <button th:if="${gestionaLecciones}" type="button" id="mEliminar">Eliminar una lección</button>
+        </div>
+    </div>
+
+    <div class="menu">
+        <button type="button" class="menu-btn" aria-haspopup="true" aria-expanded="false">Historial</button>
+        <div class="menu-list" hidden>
+            <button type="button" id="mHistLec">Ver historial de lecciones tomadas</button>
+            <button type="button" id="mHistInt">Ver historial de intentos</button>
+            <button th:if="${esAdmin}" type="button" id="mHistIng">Ver historial de ingresos</button>
+        </div>
+    </div>
+
+    <button type="button" class="menu-btn" id="mAyuda">Ayuda</button>
+
+    <span class="spacer"></span>
+    <span class="quien" th:text="${nombre}">Nombre</span>
+    <button th:if="${puedeUsuarios}" type="button" class="menu-btn" id="mAdministrar">Administrar</button>
+    <button th:if="${puedeReportes}" type="button" class="menu-btn" id="mEstadistica">Estadística</button>
+    <form th:action="@{/salir}" method="post" class="inline">
+        <button type="submit" class="menu-btn">Salir</button>
+    </form>
+</nav>
+
+<div class="titlebar">
+    <span class="tag">Lección activa</span>
+    <span class="name" id="nombreLeccion">Ninguna lección abierta</span>
+</div>
+
+<main class="layout">
+    <section class="lesson" aria-label="Panel de lección activa">
+        <p class="objetivo" id="objetivo" hidden></p>
+        <div class="md" id="contenidoLeccion">
+            <p class="muted">Abre una lección desde el menú <b>Lecciones → Abrir lección</b>.</p>
+        </div>
+    </section>
+
+    <section class="work">
+        <label class="sr" for="editor">Editor de código</label>
+        <textarea id="editor" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"
+                  placeholder="Escribe aquí tu código Java"></textarea>
+
+        <div class="actions">
+            <button type="button" class="btn" id="bCompilar" disabled title="Abre una lección primero">Compilar</button>
+            <button type="button" class="btn ok" id="bEjecutar" disabled title="Abre una lección primero">Ejecutar</button>
+        </div>
+
+        <pre class="console" id="consola" aria-live="polite" aria-label="Consola">La salida de la compilación y la ejecución aparecerá aquí.</pre>
+    </section>
+</main>
+
+<dialog id="dlgLecciones">
+    <h2>Abrir lección</h2>
+    <ul class="lista" id="listaLecciones"></ul>
+    <div class="acts"><button type="button" class="btn" data-cerrar>Cancelar</button></div>
+</dialog>
+
+<dialog id="dlgAyuda">
+    <h2>Ayuda</h2>
+    <div class="ayuda">
+        <p><b>Cómo practicar</b></p>
+        <ol>
+            <li>Abre una lección en <b>Lecciones → Abrir lección</b>.</li>
+            <li>Lee la lección y fíjate en su <b>objetivo</b>.</li>
+            <li>Escribe tú mismo el código en el editor.</li>
+            <li>Pulsa <b>Compilar</b>. Si hay errores, léelos en la consola.</li>
+            <li>Si compiló bien, pulsa <b>Ejecutar</b> para ver el resultado.</li>
+        </ol>
+        <p><b>Objetivos</b>: cada lección dice qué debes lograr (provocar un error de compilación, compilar bien, provocar un error de ejecución o ejecutar con éxito). El sistema lo verifica solo.</p>
+        <p><b>Configuración</b>: cambia el tamaño de la fuente y el tema claro u oscuro. Se guardan para tu próximo ingreso.</p>
+        <p><b>Tu código de ingreso</b>: guárdalo. Con él puedes volver y ver tu historial.</p>
+        <p><b>Límites</b>: no se puede leer texto del teclado (Scanner), solo un archivo y sin librerías externas.</p>
+    </div>
+    <div class="acts"><button type="button" class="btn" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<dialog id="dlgImportar" th:if="${gestionaLecciones}">
+    <h2>Importar compendio de lecciones</h2>
+    <div class="in">
+        <p>Selecciona un <b>.zip</b> con una o más carpetas de lección (cada una con <code>leccion.md</code> y <code>config.txt</code>). Si ya existe una lección con el mismo título, se actualiza.</p>
+        <label>Archivo zip <input type="file" id="archivoZip" accept=".zip,application/zip"></label>
+        <div id="resultadoImport" aria-live="polite"></div>
+    </div>
+    <div class="acts">
+        <button type="button" class="btn" data-cerrar>Cerrar</button>
+        <button type="button" class="btn ok" id="bImportar">Importar</button>
+    </div>
+</dialog>
+
+<dialog id="dlgEliminar" th:if="${gestionaLecciones}">
+    <h2>Eliminar una lección</h2>
+    <ul class="lista" id="listaEliminar"></ul>
+    <div class="acts"><button type="button" class="btn" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<dialog id="dlgHistorial" class="ancho">
+    <h2>Historial de Sesión</h2>
+    <div class="htabs" role="tablist" id="tabsHist">
+        <button type="button" role="tab" data-h="registros">Lecciones tomadas</button>
+        <button type="button" role="tab" data-h="intentos">Intentos</button>
+        <button th:if="${esAdmin}" type="button" role="tab" data-h="ingresos">Ingresos</button>
+    </div>
+    <div class="in">
+        <div class="filtros" id="filtrosHist" hidden>
+            <label>Desde <input type="date" id="hDesde"></label>
+            <label>Hasta <input type="date" id="hHasta"></label>
+            <button type="button" class="btn" id="hFiltrar">Filtrar</button>
+        </div>
+        <div id="tablaHist" aria-live="polite"></div>
+        <div class="pager">
+            <button type="button" class="btn" id="hPrev">Anterior</button>
+            <span id="hInfo"></span>
+            <button type="button" class="btn" id="hNext">Siguiente</button>
+        </div>
+    </div>
+    <div class="acts"><button type="button" class="btn" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<dialog id="dlgSalida">
+    <h2>Salida completa</h2>
+    <pre class="console" id="salidaTexto" style="height:auto;max-height:50vh"></pre>
+    <div class="acts"><button type="button" class="btn" data-cerrar>Cerrar</button></div>
+</dialog>
+
+
+<dialog id="dlgPass" th:if="${esAdmin}">
+    <h2>Cambiar mi contraseña</h2>
+    <div class="in">
+        <label>Contraseña actual <input type="password" id="pActual" autocomplete="current-password"></label>
+        <label>Nueva contraseña (8 a 64 caracteres) <input type="password" id="pNueva" maxlength="64" autocomplete="new-password"></label>
+        <label>Repetir nueva contraseña <input type="password" id="pRep" maxlength="64" autocomplete="new-password"></label>
+        <p class="errtxt" id="pMsg" role="alert"></p>
+    </div>
+    <div class="acts">
+        <button type="button" class="btn" data-cerrar>Cerrar</button>
+        <button type="button" class="btn ok" id="pGuardar">Cambiar</button>
+    </div>
+</dialog>
+
+<dialog id="dlgAdmins" class="ancho" th:if="${puedeUsuarios}">
+    <h2>Administrar</h2>
+    <div class="in">
+        <div class="barra">
+            <span class="muted">La eliminación es lógica: el usuario queda inactivo y no puede ingresar.</span>
+            <button type="button" class="btn ok" id="aNuevo">Nuevo administrador</button>
+        </div>
+        <div id="tablaAdmins" aria-live="polite"></div>
+    </div>
+    <div class="acts"><button type="button" class="btn" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<dialog id="dlgAdminForm" th:if="${puedeUsuarios}">
+    <h2 id="afTitulo">Administrador</h2>
+    <div class="in">
+        <label>Usuario <input id="afAcceso" maxlength="50" autocomplete="off"></label>
+        <label>Nombre completo <input id="afNombre" maxlength="120" autocomplete="off"></label>
+        <label>Contraseña <input id="afPass" type="password" maxlength="64" autocomplete="new-password"></label>
+        <p class="muted" id="afHint"></p>
+        <fieldset class="perms">
+            <legend>Módulos</legend>
+            <label class="chk"><input type="checkbox" value="GESTIONAR_LECCIONES"> Gestionar lecciones (importar, exportar, eliminar)</label>
+            <label class="chk"><input type="checkbox" value="GESTIONAR_USUARIOS"> Gestionar administradores</label>
+            <label class="chk"><input type="checkbox" value="VER_REPORTES"> Ver estadísticas</label>
+        </fieldset>
+        <p class="errtxt" id="afMsg" role="alert"></p>
+    </div>
+    <div class="acts">
+        <button type="button" class="btn" data-cerrar>Cancelar</button>
+        <button type="button" class="btn ok" id="afGuardar">Guardar</button>
+    </div>
+</dialog>
+
+<dialog id="dlgStats" class="ancho" th:if="${puedeReportes}">
+    <h2>Estadística</h2>
+    <div class="in">
+        <div class="filtros">
+            <label>Desde <input type="date" id="sDesde"></label>
+            <label>Hasta <input type="date" id="sHasta"></label>
+            <label>Agrupar por
+                <select id="sAgrupar">
+                    <option value="dia">Día</option><option value="mes">Mes</option><option value="anio">Año</option>
+                </select>
+            </label>
+            <button type="button" class="btn" id="sAplicar">Aplicar</button>
+        </div>
+        <p class="errtxt" id="sMsg" role="alert"></p>
+        <div class="kpis" id="sKpis"></div>
+        <section class="sec"><h3>Estudiantes que ingresan por período</h3><div class="cuerpo" id="sGrafico"></div></section>
+        <div class="grid2" id="sRank"></div>
+        <section class="sec"><h3>Aciertos y fallos por lección</h3><div class="cuerpo" id="sPorLeccion"></div></section>
+    </div>
+    <div class="acts"><button type="button" class="btn" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

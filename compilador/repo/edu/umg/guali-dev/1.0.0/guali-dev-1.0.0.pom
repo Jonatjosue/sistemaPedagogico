@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.umg.guali</groupId>
+    <artifactId>guali-dev</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Guali Dev</name>
+    <description>
+        Librería que abstrae la compilación y ejecución de código Java en tiempo real,
+        utilizada por la aplicación Codifica con Guali del curso Programación 1 - UMG.
+    </description>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <!-- Java version -->
+        <java.version>25</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+<!--        &lt;!&ndash;-->
+<!--            Ruta al JDK que se usará en las pruebas de integración.-->
+<!--            NO modificar este valor aquí directamente.-->
+<!--            Crear el archivo local.properties en la raíz del proyecto-->
+<!--            (está en .gitignore) y definir ahí:-->
+<!--                guali.jdk.home=/ruta/a/tu/jdk-->
+<!--        &ndash;&gt;-->
+<!--        <guali.jdk.home>${env.JAVA_HOME}</guali.jdk.home>-->
+
+        <!-- Dependency versions -->
+        <junit.version>5.11.0</junit.version>
+        <maven.surefire.version>3.3.1</maven.surefire.version>
+        <maven.compiler.version>3.13.0</maven.compiler.version>
+        <maven.shade.version>3.6.0</maven.shade.version>
+        <properties.plugin.version>1.2.1</properties.plugin.version>
+    </properties>
+
+    <dependencies>
+        <!-- JUnit 5 — solo para pruebas -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- Lee local.properties antes de cualquier fase -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>${properties.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>read-local-properties</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>${project.basedir}/local.properties</file>
+                            </files>
+                            <!-- Si local.properties no existe, no falla -->
+                            <quiet>true</quiet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Compilador Java -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.version}</version>
+                <configuration>
+                    <release>${java.version}</release>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- Pruebas: pasa guali.jdk.home como system property -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <guali.jdk.home>${guali.jdk.home}</guali.jdk.home>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!-- Fat JAR (uber-jar): sin dependencias externas en runtime -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${maven.shade.version}</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Excluye JUnit del fat JAR (solo es scope test) -->
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.junit.jupiter:*</exclude>
+                                    <exclude>org.junit.platform:*</exclude>
+                                    <exclude>org.opentest4j:*</exclude>
+                                    <exclude>org.apiguardian:*</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>jdk-home-fallback</id>
+            <activation>
+                <file>
+                    <missing>${project.basedir}/local.properties</missing>
+                </file>
+            </activation>
+            <properties>
+                <guali.jdk.home>${env.JAVA_HOME}</guali.jdk.home>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

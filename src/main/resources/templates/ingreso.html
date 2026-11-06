@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ingreso</title>
+    <link rel="stylesheet" th:href="@{/css/ingreso.css}">
+</head>
+<body>
+<main class="card">
+    <h1>Ingreso</h1>
+    <nav class="tabs">
+        <a th:href="@{/ingreso}" th:classappend="${modo == 'nuevo'} ? 'sel'">Nuevo ingreso</a>
+        <a th:href="@{/ingreso(modo='codigo')}" th:classappend="${modo == 'codigo'} ? 'sel'">Ya tengo código</a>
+    </nav>
+
+    <div class="body">
+        <div class="err" role="alert" th:if="${error}" th:text="${error}"></div>
+
+        <form th:if="${modo == 'nuevo'}" th:action="@{/ingreso/nuevo}" method="post" class="body" style="padding:0">
+            <p>Escribe tu nombre para empezar. Te daremos un código para que puedas volver y ver tus intentos.</p>
+            <label>Tu nombre
+                <input name="nombre" maxlength="250" autocomplete="name" required placeholder="Ej. Juan Pérez">
+            </label>
+            <button class="btn" type="submit">Crear ingreso</button>
+        </form>
+
+        <form th:if="${modo == 'codigo'}" th:action="@{/ingreso/codigo}" method="post" class="body" style="padding:0">
+            <p>Escribe el código que recibiste la primera vez.</p>
+            <label>Código
+                <input name="codigo" maxlength="8" autocomplete="off" autocapitalize="characters"
+                       spellcheck="false" required placeholder="8 caracteres" style="text-transform:uppercase">
+            </label>
+            <button class="btn" type="submit">Entrar</button>
+        </form>
+    </div>
+
+    <div class="foot"><a th:href="@{/admin/login}">Soy administrador</a></div>
+</main>
+</body>
+</html>

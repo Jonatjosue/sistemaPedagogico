@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Acceso de administrador</title>
+    <link rel="stylesheet" th:href="@{/css/ingreso.css}">
+</head>
+<body>
+<main class="card">
+    <h1>Acceso de administrador</h1>
+    <form class="body" th:action="@{/admin/login}" method="post">
+        <div class="err" role="alert" th:if="${param.error}">Usuario o contraseña incorrectos, o cuenta inactiva.</div>
+        <label>Usuario <input name="username" autocomplete="username" required></label>
+        <label>Contraseña <input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn" type="submit">Iniciar sesión</button>
+    </form>
+    <div class="foot"><a th:href="@{/ingreso}">Volver al ingreso de estudiantes</a></div>
+</main>
+</body>
+</html>
