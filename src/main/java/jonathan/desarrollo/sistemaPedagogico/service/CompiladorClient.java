@@ -49,6 +49,8 @@ public class CompiladorClient {
             if (r == null) throw new NoDisponibleException(null);
             return r;
         } catch (RestClientException e) {
+            org.slf4j.LoggerFactory.getLogger(CompiladorClient.class)
+                    .warn("Fallo al llamar al compilador ({}): {}", ruta, e.toString());
             throw new NoDisponibleException(e);
         }
     }
